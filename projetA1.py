@@ -78,10 +78,14 @@ def modify_temperature(np_array_sliced):
             # incrémenter l'index de température pour la phase B
             temperature_index_B += 1
         #construire la nouvelle commande de température
-        temperature_command=  "M109 S"  +str(temperature_variation)+"\n"
+        temperature_command=  "M109 S"  +str(int(temperature_variation))+"\n"
+        layer_change_index=np.where(slice==";LAYER_CHANGE\n")[0]
+        if layer_change_index.size>0:
+            layer_change_index=layer_change_index[0]
+        np_array_sliced[i] = np.insert(slice,layer_change_index +1, temperature_command)
         #inserer la nouvelle commande de temperature au debut de la tranche
 #        np_array_sliced[i] = np.insert(slice, 0 ,temperature_command)
-        np_array_sliced[i]=np.append(slice,temperature_command)
+#        np_array_sliced[i]=np.append(slice,temperature_command)
     return np_array_sliced
 
 
@@ -148,6 +152,5 @@ np_array_sliced=modify_temperature(np_array_sliced)
 np_array_sliced=modify_speed(np_array_sliced)
 #enregistrer le resultat dans un fichier gcoe de sortie
 save_file("fichier_sortie1.gcode",np.concatenate(np_array_sliced))
-
 
 
