@@ -1,7 +1,6 @@
-#
 import numpy as np
-
-GCODE_FILE = "fichier_entree.gcode"
+import re
+GCODE_FILE = "fichier_sortie.gcode"
 # Supposing that phase slices are constant
 PHASE_A_QUANTITY = 10
 PHASE_B_QUANTITY = 40
@@ -74,14 +73,15 @@ def modify_temperature(np_array_sliced):
             temperature_index_A += 1
         else:
             # obtenir la variation de température pour cette tranche
-            temperature_variation = temperature_variation_B[temperature_index_B]
+            if temperature_index_B<len(temperature_variation_B):
+                temperature_variation = temperature_variation_B[temperature_index_B]
             # incrémenter l'index de température pour la phase B
             temperature_index_B += 1
         #construire la nouvelle commande de température
-        temperature_command="M104 S"+str(temperature_variation)+"\n"
+        temperature_command=  "M109 S"  +str(temperature_variation)+"\n"
         #inserer la nouvelle commande de temperature au debut de la tranche
-        np_array_sliced[i] = np.insert(slice, 0,temperature_command)
-
+#        np_array_sliced[i] = np.insert(slice, 0 ,temperature_command)
+        np_array_sliced[i]=np.append(slice,temperature_command)
     return np_array_sliced
 
 
@@ -99,8 +99,9 @@ def modify_speed(np_array_sliced):
             # incrémenter l'index de vitesse pour la phase A
             speed_index_A += 1
         else:
+            if speed_index_B < len(speed_variation_B):
             # obtenir la variation de vitesse pour cette tranche
-            speed_variation = speed_variation_B[speed_index_B]
+                speed_variation = speed_variation_B[speed_index_B]
             # incrémenter l'index de vitesse pour la phase B
             speed_index_B += 1
 
@@ -115,7 +116,8 @@ def modify_speed(np_array_sliced):
                     # vérifier si cette partie contient une instruction de vitesse
                     if part.startswith("F"):
                         # obtenir la vitesse actuelle
-                        current_speed = float(part[1:])
+                        current_speed_str=re.findall(r'\d+',part[1:])[0]
+                        current_speed = float(current_speed_str)
                         # calculer la nouvelle vitesse
                         new_speed = current_speed * (1 + speed_variation / 100)
                         # mettre à jour la partie avec la nouvelle vitesse
@@ -145,6 +147,7 @@ np_array_sliced=modify_temperature(np_array_sliced)
 #modifier les instruction de vitesse dan le tableau numpy
 np_array_sliced=modify_speed(np_array_sliced)
 #enregistrer le resultat dans un fichier gcoe de sortie
-save_file("fichier_sortie.gcode",np.concatenate(np_array_sliced))
+save_file("fichier_sortie1.gcode",np.concatenate(np_array_sliced))
+
 
 
